@@ -27,9 +27,12 @@ use crate::{
 };
 
 /// Stream used to communicate with the host.
+/// Stream used to communicate with the host.
 pub enum Stream {
-    #[cfg(not(target_env = "sgx"))]
+    #[cfg(unix)]
     Unix(std::os::unix::net::UnixStream),
+    #[cfg(windows)]
+    Unix(std::net::TcpStream), // Placeholder để biên dịch, có thể thay bằng loại khác nếu cần
     Tcp(std::net::TcpStream),
     #[cfg(feature = "tdx")]
     Vsock(vsock::VsockStream),
@@ -39,8 +42,10 @@ impl Read for &Stream {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         #[allow(clippy::borrow_deref_ref)]
         match self {
-            #[cfg(not(target_env = "sgx"))]
+            #[cfg(unix)]
             Stream::Unix(stream) => (&*stream).read(buf),
+            #[cfg(windows)]
+            Stream::Unix(stream) => (&*stream).read(buf), // Sử dụng TcpStream làm placeholder
             Stream::Tcp(stream) => (&*stream).read(buf),
             #[cfg(feature = "tdx")]
             Stream::Vsock(stream) => (&*stream).read(buf),
@@ -52,8 +57,10 @@ impl Write for &Stream {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         #[allow(clippy::borrow_deref_ref)]
         match self {
-            #[cfg(not(target_env = "sgx"))]
+            #[cfg(unix)]
             Stream::Unix(stream) => (&*stream).write(buf),
+            #[cfg(windows)]
+            Stream::Unix(stream) => (&*stream).write(buf), // Sử dụng TcpStream làm placeholder
             Stream::Tcp(stream) => (&*stream).write(buf),
             #[cfg(feature = "tdx")]
             Stream::Vsock(stream) => (&*stream).write(buf),
@@ -63,14 +70,17 @@ impl Write for &Stream {
     fn flush(&mut self) -> std::io::Result<()> {
         #[allow(clippy::borrow_deref_ref)]
         match self {
-            #[cfg(not(target_env = "sgx"))]
+            #[cfg(unix)]
             Stream::Unix(stream) => (&*stream).flush(),
+            #[cfg(windows)]
+            Stream::Unix(stream) => (&*stream).flush(), // Sử dụng TcpStream làm placeholder
             Stream::Tcp(stream) => (&*stream).flush(),
             #[cfg(feature = "tdx")]
             Stream::Vsock(stream) => (&*stream).flush(),
         }
     }
 }
+   
 
 /// Maximum message size.
 const MAX_MESSAGE_SIZE: usize = 16 * 1024 * 1024; // 16MiB
