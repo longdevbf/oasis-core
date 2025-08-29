@@ -69,10 +69,18 @@ fn connect() -> Result<Stream> {
     match BUILD_INFO.tee_type {
         #[cfg(not(target_env = "sgx"))]
         TeeType::Sgx | TeeType::None => {
-            let stream = std::os::unix::net::UnixStream::connect(
-                std::env::var("OASIS_WORKER_HOST").unwrap_or_default(),
-            )?;
-            Ok(Stream::Unix(stream))
+            #[cfg(unix)]
+            {
+                let stream = std::os::unix::net::UnixStream::connect(
+                    std::env::var("OASIS_WORKER_HOST").unwrap_or_default(),
+                )?;
+                Ok(Stream::Unix(stream))
+            }
+            #[cfg(windows)]
+            {
+                // Thay bằng TCP hoặc trả về lỗi trên Windows
+                return Err(anyhow::anyhow!("Unix sockets are not supported on Windows, use TCP or another mechanism"));
+            }
         }
 
         #[cfg(target_env = "sgx")]
@@ -83,10 +91,7 @@ fn connect() -> Result<Stream> {
 
         #[cfg(feature = "tdx")]
         TeeType::Tdx => {
-            /// VSOCK port used for the Runtime Host Protocol.
             const VSOCK_PORT_RHP: u32 = 1;
-
-            // Accept first connection.
             let listener = vsock::VsockListener::bind(&vsock::VsockAddr::new(
                 libc::VMADDR_CID_ANY,
                 VSOCK_PORT_RHP,
