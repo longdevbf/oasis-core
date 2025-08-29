@@ -32,7 +32,7 @@ pub enum Stream {
     #[cfg(unix)]
     Unix(std::os::unix::net::UnixStream),
     #[cfg(windows)]
-    Unix(std::net::TcpStream), // Placeholder để biên dịch, có thể thay bằng loại khác nếu cần
+    Unix(std::net::TcpStream),
     Tcp(std::net::TcpStream),
     #[cfg(feature = "tdx")]
     Vsock(vsock::VsockStream),
@@ -45,7 +45,7 @@ impl Read for &Stream {
             #[cfg(unix)]
             Stream::Unix(stream) => (&*stream).read(buf),
             #[cfg(windows)]
-            Stream::Unix(stream) => (&*stream).read(buf), // Sử dụng TcpStream làm placeholder
+            Stream::Unix(stream) => (&*stream).read(buf),
             Stream::Tcp(stream) => (&*stream).read(buf),
             #[cfg(feature = "tdx")]
             Stream::Vsock(stream) => (&*stream).read(buf),
@@ -60,7 +60,7 @@ impl Write for &Stream {
             #[cfg(unix)]
             Stream::Unix(stream) => (&*stream).write(buf),
             #[cfg(windows)]
-            Stream::Unix(stream) => (&*stream).write(buf), // Sử dụng TcpStream làm placeholder
+            Stream::Unix(stream) => (&*stream).write(buf),
             Stream::Tcp(stream) => (&*stream).write(buf),
             #[cfg(feature = "tdx")]
             Stream::Vsock(stream) => (&*stream).write(buf),
@@ -73,7 +73,7 @@ impl Write for &Stream {
             #[cfg(unix)]
             Stream::Unix(stream) => (&*stream).flush(),
             #[cfg(windows)]
-            Stream::Unix(stream) => (&*stream).flush(), // Sử dụng TcpStream làm placeholder
+            Stream::Unix(stream) => (&*stream).flush(),
             Stream::Tcp(stream) => (&*stream).flush(),
             #[cfg(feature = "tdx")]
             Stream::Vsock(stream) => (&*stream).flush(),
