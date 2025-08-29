@@ -78,8 +78,13 @@ fn connect() -> Result<Stream> {
             }
             #[cfg(windows)]
             {
-                // Thay bằng TCP hoặc trả về lỗi trên Windows
-                return Err(anyhow::anyhow!("Unix sockets are not supported on Windows, use TCP or another mechanism"));
+                // Sử dụng TcpStream trên Windows
+                let host = std::env::var("OASIS_WORKER_HOST")
+                    .unwrap_or("localhost:12345".to_string()); // Mặc định port 12345
+                let stream = std::net::TcpStream::connect(&host).map_err(|e| {
+                    anyhow::anyhow!("Failed to connect to worker host via TCP: {}", e)
+                })?;
+                Ok(Stream::Tcp(stream))
             }
         }
 
